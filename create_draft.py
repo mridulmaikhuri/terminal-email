@@ -1,5 +1,6 @@
 import base64
 import os
+import mimetypes
 from email.message import EmailMessage
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -25,17 +26,27 @@ def get_creds():
             token.write(creds.to_json())
     return creds
 
-def create_gmail_draft(recepient, subject, body):
+def create_gmail_draft(to, subject, body, *attachments):
     creds = get_creds()
 
     try:
         service = build('gmail', 'v1', credentials=creds)
         message = EmailMessage()
         message.set_content(body)
-        message['To'] = recepient
+        message['To'] = to
         message['From'] = 'mridulmaikhuri1234@gmail.com'
         message['Subject'] = subject
-        
+
+        # Adding attachments to mail
+        for attachment in attachments:
+            print(attachment, type(attachment))
+            attachment_filename = attachment
+            type_subtype, _ = mimetypes.guess_type(attachment_filename) # guessing the MIME type
+            maintype, subtype = type_subtype.split("/")
+            with open(attachment_filename, "rb") as fp:
+                attachment_data = fp.read()
+            message.add_attachment(attachment_data, maintype, subtype, filename=attachment_filename)
+
         #encode message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         create_message = {'message': {'raw': encoded_message}}
@@ -54,7 +65,8 @@ def create_gmail_draft(recepient, subject, body):
     return draft
 
 if __name__ == '__main__':
-    recepient = input('Enter the email address of the recepient:\n\t')
+    to = input('Enter the email address of the recepient:\n\t')
     subject = input('Enter the title of the email:\n\t')
     body = input('Enter the draft message you want to send:\n\t')
-    create_gmail_draft(recepient, subject, body)
+    attachments = input('Enter the path of attachment files (single space(\' \') separated):\n\t')
+    create_gmail_draft(to, subject, body, attachments)

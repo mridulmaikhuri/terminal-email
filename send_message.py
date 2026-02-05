@@ -1,6 +1,6 @@
 import base64
 import os
-
+import mimetypes
 from email.message import EmailMessage
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -27,7 +27,7 @@ def get_creds():
     return creds
 
 
-def send_gmail_message(to, subject, body):
+def send_gmail_message(to, subject, body, *attachments):
   creds = get_creds()
 
   try:
@@ -39,6 +39,16 @@ def send_gmail_message(to, subject, body):
     message["To"] = to
     message["From"] = 'mridulmaikhuri1234@gmail.com'
     message["Subject"] = subject
+
+    # Adding attachments to mail
+    for attachment in attachments:
+        print(attachment, type(attachment))
+        attachment_filename = attachment
+        type_subtype, _ = mimetypes.guess_type(attachment_filename) # guessing the MIME type
+        maintype, subtype = type_subtype.split("/")
+        with open(attachment_filename, "rb") as fp:
+            attachment_data = fp.read()
+        message.add_attachment(attachment_data, maintype, subtype, filename=attachment_filename)
 
     # encoded message
     encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
@@ -61,4 +71,5 @@ if __name__ == "__main__":
     to = input('Enter the email address of the recepient:\n\t')
     subject = input('Enter the title of the email:\n\t')
     body = input('Enter the draft message you want to send:\n\t')
-    send_gmail_message(to, subject, body)
+    attachments = input('Enter the path of attachment files (single space(\' \') separated):\n\t')
+    send_gmail_message(to, subject, body, attachments)

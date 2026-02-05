@@ -14,12 +14,14 @@ def main():
       to = input('Enter the email address of the recepient:\n\t')
       subject = input('Enter the title of the email:\n\t')
       body = input('Enter the draft message you want to send:\n\t')
-      create_gmail_draft(to, subject, body)
+      attachments = input('Enter the name of attachment files (single space(\' \') separated):\n\t')
+      create_gmail_draft(to, subject, body, attachments)
     elif (choice == 2):
       to = input('Enter the email address of the recepient:\n\t')
       subject = input('Enter the title of the email:\n\t')
       body = input('Enter the draft message you want to send:\n\t')
-      send_gmail_message(to, subject, body)
+      attachments = input('Enter the name of attachment files (single space(\' \') separated):\n\t')
+      send_gmail_message(to, subject, body, attachments)
     else:
       print("Exiting the app...")
       break

@@ -1,3 +1,8 @@
+# Folders
 __pycache__/
 credentials/
 venv/
+assets/
+experimental/
+
+# Files
