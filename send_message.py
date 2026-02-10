@@ -1,34 +1,18 @@
 import base64
-import os
 import mimetypes
+
 from email.message import EmailMessage
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
-
-def get_creds():
-    creds = None
-    if os.path.exists("credentials/compose_token.json"):
-        creds = Credentials.from_authorized_user_file("credentials/compose_token.json", SCOPES)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "credentials/credentials.json", SCOPES
-            )
-            creds = flow.run_local_server(port=0)
-        with open("credentials/compose_token.json", "w") as token:
-            token.write(creds.to_json())
-    return creds
-
+from utils.creds import get_compose_creds
+from utils.email_validator import is_email_valid
 
 def send_gmail_message(to, subject, body, *attachments):
-  creds = get_creds()
+  if (not is_email_valid(to)):
+      print("E-mail address of recepient is not valid")
+      return
+  creds = get_compose_creds()
 
   try:
     service = build("gmail", "v1", credentials=creds)
@@ -44,7 +28,7 @@ def send_gmail_message(to, subject, body, *attachments):
     for attachment in attachments:
         print(attachment, type(attachment))
         attachment_filename = attachment
-        type_subtype, _ = mimetypes.guess_type(attachment_filename) # guessing the MIME type
+        type_subtype, _ = mimetypes.guess_type(attachment_filename)
         maintype, subtype = type_subtype.split("/")
         with open(attachment_filename, "rb") as fp:
             attachment_data = fp.read()
@@ -60,7 +44,7 @@ def send_gmail_message(to, subject, body, *attachments):
         .send(userId="me", body=create_message)
         .execute()
     )
-    print(f'Message with message id: {send_message["id"]} sent.')
+    print(f'Message with message id: {send_message["id"]} successfully sent.')
   except HttpError as error:
     print(f"An error occurred: {error}")
     send_message = None
@@ -71,5 +55,5 @@ if __name__ == "__main__":
     to = input('Enter the email address of the recepient:\n\t')
     subject = input('Enter the title of the email:\n\t')
     body = input('Enter the draft message you want to send:\n\t')
-    attachments = input('Enter the path of attachment files (single space(\' \') separated):\n\t')
-    send_gmail_message(to, subject, body, attachments)
+    attachments = input('Enter the path of attachment files (single space(\' \') separated):\n\t').split()
+    send_gmail_message(to, subject, body, *attachments)
