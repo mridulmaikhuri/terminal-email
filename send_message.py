@@ -12,6 +12,7 @@ def send_gmail_message(to, subject, body, *attachments):
   if (not is_email_valid(to)):
       print("E-mail address of recepient is not valid")
       return
+  
   creds = get_compose_creds()
 
   try:
